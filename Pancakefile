@@ -1,0 +1,19 @@
+
+target 'build',
+    desc: 'Build the whole system'
+    depends: [ 'compile' ]
+    action: -> console.log("Build")
+
+target 'compile',
+    desc: 'Compile files'
+    action: -> console.log("Compile")
+
+target 'copy',
+    action: -> console.log("Copy")
+
+target 'install',
+    depends: [ 'build', 'copy' ]
+    action: -> console.log("Install")
+
+target 'all',
+    depends: [ 'build', 'install' ]
