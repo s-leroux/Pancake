@@ -12,8 +12,7 @@ exports.actions =
     #
     forEach: (pattern, callback) ->
         ->
-            for file in utils.glob "#{pattern}", "."
-                callback file
+            utils.glob "#{pattern}", ".", callback
 
     #
     # Compile (CoffeScript) files
@@ -43,8 +42,8 @@ exports.actions =
     # @pattern A glob pattern to match file names
     #
     rm: (pattern) ->
-        exports.actions.forEach pattern, (file) ->
-            console.log "rm #{file}"
+        -> utils.backglob "#{pattern}", ".", (file, stat) ->
+            console.log "rm #{file} #{stat.isDirectory()}"
 
 
     

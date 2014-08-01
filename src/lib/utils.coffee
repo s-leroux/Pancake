@@ -12,6 +12,12 @@ exports.normpath = normpath = (path) ->
         replace(/\/*(\/|$)/g,"$1").
         replace(/^$/,'.')
 
+#
+#   depth first walk through directory hierarchy
+#
+#   If the callback returns false, do not explore the given
+#   sub-tree
+#
 exports.walk = walk = (path, callback) ->
     paths = [ path ]
     while path = paths.shift()
@@ -20,30 +26,47 @@ exports.walk = walk = (path, callback) ->
             paths = ([path, file].join "/" for file in fs.readdirSync(path)).concat paths
     true
 
-exports.globToRE = globToRE = (pattern) ->
-    "^" + pattern.
-        replace(/([.$^+=!:${}()|\[\]\\])/g, "\\$1").
-        split("*").join("[^/]*").
-        split("[^/]*[^/]*/").join("(.*/)*").
-        split("[^/]*[^/]*").join("(.*)").
-        replace("?", ".") + "$"
-    
+#
+#   Walk through a directory in reverse order (comp. to `walk`)
+#
+exports.backwalk = backwalk = (path, callback) ->
+    _backwalk = (filelist) ->
+        for file in filelist
+            stat = fs.statSync file
+            if stat.isDirectory()
+                _backwalk ([file, x].join("/") for x in fs.readdirSync(file).reverse())
 
-exports.glob = (glob, path) ->
+            callback file, stat
+
+    _backwalk [ path ]
+    true
+
+exports.globToRE = globToRE = (pattern) ->
+    re = pattern.
+            replace(/([.$^+=!:${}()|\[\]\\])/g, "\\$1").
+            split("*").join("[^/]*").
+            replace(/\/(\[\^\/\]\*\[\^\/\]\*\/)+/g, "/(.*/)*").
+            replace(/^(\[\^\/\]\*\[\^\/\]\*\/)+/g, "(.*/)*").
+            replace(/(\/\[\^\/\]\*\[\^\/\]\*)+$/g, "(/.*)*").
+            replace("?", ".")
+
+    "^#{re}$"
+
+_glob = (fWalk, glob, path, callback) ->
     re = globToRE (normpath glob)
     path = normpath path
-    #depth = re.indexOf(".*") > -1
-    depth = true
     re = new RegExp re
 
-    result = []
-
     baseLen = path.length+1 # +1 for '/'
-    exports.walk path, (file) ->
+    fWalk path, (file, stat) ->
         # console.log file, re, file[baseLen..].match re
-        result.push file if file[baseLen..].match re
-        depth
+        callback file, stat if (file[baseLen..].match re) or
+                                (stat.isDirectory() and (file[baseLen..]+'/').match re)
+        true # Force deep traversal
 
-    result
+exports.glob = (glob, path, callback) ->
+    _glob exports.walk, glob, path, callback
 
+exports.backglob = (glob, path, callback) ->
+    _glob exports.backwalk, glob, path, callback
 

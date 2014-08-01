@@ -10,10 +10,10 @@ target 'compile',
     desc: 'Compile files'
     action: ->
         console.log "Compile"
-        do compile '**.coffee', BUILDIR
+        do compile '**/*.coffee', BUILDIR
 
 target 'copy',
-    action: copy("**.coffee", "dest")
+    action: copy "**/*.coffee", "dest"
 
 target 'install',
     depends: [ 'build', 'copy' ]
@@ -21,7 +21,7 @@ target 'install',
 
 target 'clean',
     desc: 'Clean the buid directory. Remove everything!'
-    action: rm BUILDIR
+    action: rm "#{BUILDIR}/**"
 
 target 'all',
     depends: [ 'build', 'install' ]
