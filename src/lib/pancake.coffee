@@ -18,6 +18,8 @@ helpers.extend global,
         tasks_list.push(name)
         tasks[name] = attr
 
+helpers.extend global, (require './actions').actions
+
 buildTree = ->
     while targets.length
         target = targets.shift()

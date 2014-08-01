@@ -2,18 +2,20 @@
 target 'build',
     desc: 'Build the whole system'
     depends: [ 'compile' ]
-    action: -> console.log("Build")
+    action: -> console.log "Build" 
 
 target 'compile',
     desc: 'Compile files'
-    action: -> console.log("Compile")
+    action: ->
+        console.log "Compile"
+        do compile '**.coffee', 'build' 
 
 target 'copy',
-    action: -> console.log("Copy")
+    action: copy("**.coffee", "dest")
 
 target 'install',
     depends: [ 'build', 'copy' ]
-    action: -> console.log("Install")
+    action: -> console.log "Install" 
 
 target 'all',
     depends: [ 'build', 'install' ]
