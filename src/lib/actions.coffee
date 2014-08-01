@@ -12,7 +12,7 @@ exports.actions =
     #
     forEach: (pattern, callback) ->
         ->
-            for file in utils.glob "./#{pattern}", "."
+            for file in utils.glob "#{pattern}", "."
                 callback file
 
     #
@@ -34,5 +34,17 @@ exports.actions =
     copy: (pattern, dest) ->
         exports.actions.forEach pattern, (file) ->
             console.log "Copy #{file} to #{dest}"
+
+    #
+    # Remove files and directories
+    #
+    # Caution: this will *recursively* remove directories!
+    #
+    # @pattern A glob pattern to match file names
+    #
+    rm: (pattern) ->
+        exports.actions.forEach pattern, (file) ->
+            console.log "rm #{file}"
+
 
     

@@ -1,16 +1,26 @@
 fs = require 'fs'
 
-exports.walk = (path, callback) ->
+
+#
+#   Kind of path normalization
+#
+#   remove extra `./` and sequences of multiple `/`
+#   Currently this function does not support `..` !
+#
+exports.normpath = normpath = (path) ->
+    path.replace(/(^|\/)(\.(\/|$))+/g,"$1").
+        replace(/\/*(\/|$)/g,"$1").
+        replace(/^$/,'.')
+
+exports.walk = walk = (path, callback) ->
     paths = [ path ]
     while path = paths.shift()
-        for file in fs.readdirSync(path)
-            fullfilepath = [path, file].join "/"
-            stat = fs.statSync fullfilepath
-            if callback fullfilepath, stat
-                paths.unshift fullfilepath if stat.isDirectory()
+        stat = fs.statSync path
+        if (callback path, stat) and (stat.isDirectory())
+            paths = ([path, file].join "/" for file in fs.readdirSync(path)).concat paths
     true
 
-exports.globToRE = (pattern) ->
+exports.globToRE = globToRE = (pattern) ->
     "^" + pattern.
         replace(/([.$^+=!:${}()|\[\]\\])/g, "\\$1").
         split("*").join("[^/]*").
@@ -20,16 +30,20 @@ exports.globToRE = (pattern) ->
     
 
 exports.glob = (glob, path) ->
-    re = exports.globToRE glob
+    re = globToRE (normpath glob)
+    path = normpath path
     #depth = re.indexOf(".*") > -1
     depth = true
     re = new RegExp re
 
     result = []
 
+    baseLen = path.length+1 # +1 for '/'
     exports.walk path, (file) ->
-        # console.log file, re, file.match re
-        result.push file if file.match re
+        # console.log file, re, file[baseLen..].match re
+        result.push file if file[baseLen..].match re
         depth
 
     result
+
+
